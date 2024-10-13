@@ -14,7 +14,17 @@ import {
 
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { useRouter } from "next/navigation";
@@ -28,6 +38,18 @@ interface CryptoPriceResponse {
   ethereum: {
     usd: number;
   };
+}
+interface Network {
+  id: string;
+  chain_identifier: string;
+  name: string;
+}
+
+interface Token {
+  id: string;
+  symbol: string;
+  name: string;
+  platforms: Record<string, string>;
 }
 
 const plans: plansType[] = [
@@ -56,7 +78,7 @@ export default function Component() {
     plans[0],
   );
   const { toast } = useToast();
-  const [ethPrice, setEthPrice] = useState<number | undefined>();
+
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [paymentSuccessful, setPaymentSuccessful] = useState(false);
@@ -80,32 +102,90 @@ export default function Component() {
     setPaymentSuccessful(true);
   };
 
+  const [networks, setNetworks] = useState<Network[]>([]);
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<string>("");
+  const [selectedToken, setSelectedToken] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tokenPrice, setTokenPrice] = useState<number | undefined>();
   useEffect(() => {
-    const fetchEthPrice = async () => {
-      try {
-        const response = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
-        );
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const data: CryptoPriceResponse = await response.json();
-
-        // Now the `ethereum` object and its properties are typed properly
-        setEthPrice(data.ethereum.usd);
-      } catch (error) {
-        console.error("Failed to fetch ETH price:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch ETH price. Please try again later.",
-          variant: "destructive",
-        });
-      }
-    };
-    void fetchEthPrice();
+    void fetchNetworks();
   }, []);
 
+  useEffect(() => {
+    if (selectedNetwork) {
+      void fetchTokensByNetwork(selectedNetwork);
+    }
+  }, [selectedNetwork]);
+
+  const fetchNetworks = async (): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Simulating API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/asset_platforms",
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch networks");
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const data: Network[] = await response.json();
+      setNetworks(data.filter((network) => network.chain_identifier !== null));
+    } catch (error) {
+      console.error("Error fetching networks:", error);
+      setError("Failed to load networks. Please try again later.");
+    }
+    setLoading(false);
+  };
+
+  const fetchTokensByNetwork = async (
+    selectedNetwork: string,
+  ): Promise<void> => {
+    setLoading(true);
+    try {
+      // Simulating API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Fetch the full list of tokens from CoinGecko
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/coins/list?include_platform=true",
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tokens: ${response.statusText}`);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const data: Token[] = await response.json();
+
+      // Filter tokens by the selected network platform
+      const filteredTokens = data.filter(
+        (token: Token) =>
+          // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+          token.platforms && token.platforms[selectedNetwork.toLowerCase()],
+      );
+
+      setTokens(filteredTokens.slice(0, 100)); // Limit to first 100 tokens for performance
+    } catch (error) {
+      console.error("Error fetching tokens:", error);
+      setTokens([]);
+    }
+    setLoading(false);
+  };
+
+  const handleNetworkChange = (value: string) => {
+    setSelectedNetwork(value);
+    setSelectedToken("");
+  };
+
+  const handleTokenChange = (value: string) => {
+    setSelectedToken(value);
+  };
   const handleCryptoPayment = async () => {
-    if (!selectedPlan || !ethPrice) return;
+    if (!selectedPlan || !selectedToken) return;
 
     setPaymentLoading(true);
     try {
@@ -119,14 +199,13 @@ export default function Component() {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const signer = await provider.getSigner();
 
-        const amountInEth = selectedPlan.price / ethPrice;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        const amountInWei = ethers.parseEther(amountInEth.toFixed(18));
+        const amountInToken = selectedPlan.price / tokenPrice!;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+        const amountInWei = ethers.parseEther(amountInToken.toFixed(18));
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const tx = await signer.sendTransaction({
           to: recipientAddress,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           value: amountInWei,
         });
 
@@ -134,7 +213,7 @@ export default function Component() {
 
         toast({
           title: "Payment Successful",
-          description: `You have successfully paid ${amountInEth.toFixed(6)} ETH for the ${selectedPlan.name} plan.`,
+          description: `You have successfully paid ${amountInToken.toFixed(6)} ETH for the ${selectedPlan.name} plan.`,
         });
         handlePaymentSuccess();
       } else {
@@ -153,14 +232,37 @@ export default function Component() {
   };
 
   const getQRCodeValue = () => {
-    if (!selectedPlan || !ethPrice) return "";
-    const amountInEth = selectedPlan.price / ethPrice;
+    if (!selectedPlan || !tokenPrice) return "";
+    const amountInEth = selectedPlan.price / tokenPrice;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    return `ethereum:${recipientAddress}?value=${ethers.parseEther(
+    return `${selectedToken}:${recipientAddress}?value=${ethers.parseEther(
       amountInEth.toFixed(18),
     )}`;
   };
 
+  useEffect(() => {
+    const fetchTokenPrice = async () => {
+      try {
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${selectedToken}&vs_currencies=usd`,
+        );
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const data: CryptoPriceResponse = await response.json();
+
+        // Now the `ethereum` object and its properties are typed properly
+        setTokenPrice(data.ethereum.usd);
+      } catch (error) {
+        console.error("Failed to fetch ETH price:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch ETH price. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    };
+    void fetchTokenPrice();
+  }, []);
   return (
     <>
       <div className="container mx-auto max-w-4xl p-4">
@@ -239,19 +341,76 @@ export default function Component() {
 
                 <div className="text-muted-foreground text-sm">chosen plan</div>
               </div>
-              <div>
-                <div className="font-semibold">
-                  Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
+              <div className="bg-card mx-auto w-full max-w-md space-y-6 rounded-lg p-6 shadow-md">
+                <div className="space-y-2">
+                  <Label htmlFor="network-select">Select Network</Label>
+                  {loading && !selectedNetwork ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <Select
+                      onValueChange={handleNetworkChange}
+                      value={selectedNetwork}
+                    >
+                      <SelectTrigger id="network-select">
+                        <SelectValue placeholder="Choose a network" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {networks.map((network) => (
+                          <SelectItem key={network.id} value={network.id}>
+                            {network.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
-                <div className="text-lg">
-                  Amount to pay:
-                  <span className="font-bold">
-                    {selectedPlan
-                      ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
-                      : "0"}
-                    ETH
-                  </span>
+
+                <div className="space-y-2">
+                  <Label htmlFor="token-select">Select Token</Label>
+                  {loading && selectedNetwork ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <Select
+                      onValueChange={handleTokenChange}
+                      value={selectedToken}
+                      disabled={!selectedNetwork}
+                    >
+                      <SelectTrigger id="token-select">
+                        <SelectValue placeholder="Choose a token" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tokens.map((token) => (
+                          <SelectItem key={token.id} value={token.id}>
+                            {token.symbol} - {token.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                {selectedNetwork && selectedToken && (
+                  <div className="bg-muted rounded-md p-4">
+                    <p className="font-semibold">Selected:</p>
+                    <p>
+                      Network:{" "}
+                      {networks.find((n) => n.id === selectedNetwork)?.name}
+                    </p>
+                    <p>
+                      Token: {tokens.find((t) => t.id === selectedToken)?.name}{" "}
+                      ({tokens.find((t) => t.id === selectedToken)?.symbol})
+                    </p>
+                    <p>Price : {tokenPrice}</p>
+                  </div>
+                )}
               </div>
               {!paymentSuccessful ? (
                 <div>
