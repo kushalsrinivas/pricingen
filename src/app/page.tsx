@@ -121,11 +121,10 @@ export default function Component() {
         throw new Error("MetaMask is not installed");
       }
     } catch (error) {
-      console.error("Payment failed:", error);
+      console.log(error);
       toast({
         title: "Payment Failed",
-        description:
-          "There was an error processing your payment. Please try again.",
+        description: "some shit went down",
         variant: "destructive",
       });
     } finally {
