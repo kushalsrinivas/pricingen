@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Check, Wallet, QrCode } from "lucide-react";
+import { Check, Wallet, QrCode, CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ethers } from "ethers";
 import {
@@ -17,6 +17,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
+import { useRouter } from "next/navigation";
 
 interface plansType {
   name: string;
@@ -58,8 +59,26 @@ export default function Component() {
   const [ethPrice, setEthPrice] = useState<number | undefined>();
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [paymentSuccessful, setPaymentSuccessful] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(10);
 
-  // Replace with your actual wallet address
+  const router = useRouter(); 
+
+  useEffect(() => {
+    if (paymentSuccessful && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else if (timeLeft === 0) {
+      router.push("/new-url"); // Replace with the actual URL you want to redirect to
+    }
+  }, [paymentSuccessful, timeLeft, router]);
+
+  const handlePaymentSuccess = () => {
+    setPaymentSuccessful(true);
+  };
 
   useEffect(() => {
     const fetchEthPrice = async () => {
@@ -117,6 +136,7 @@ export default function Component() {
           title: "Payment Successful",
           description: `You have successfully paid ${amountInEth.toFixed(6)} ETH for the ${selectedPlan.name} plan.`,
         });
+        handlePaymentSuccess();
       } else {
         throw new Error("MetaMask is not installed");
       }
@@ -222,37 +242,51 @@ export default function Component() {
                 </CardHeader>
               </Card>
             </div>
-            <div className="my-5">
-              <div className="flex space-x-2">
-                <Button
-                  className="w-full"
-                  onClick={handleCryptoPayment}
-                  disabled={paymentLoading}
-                >
-                  <Wallet className="mr-2 h-4 w-4" />
-                  {paymentLoading ? "Processing..." : `Pay with MetaMask`}
-                </Button>
-                <Button
-                  className="w-full"
-                  onClick={() => setShowQR(!showQR)}
-                  variant="outline"
-                >
-                  <QrCode className="mr-2 h-4 w-4" />
-                  {showQR ? "Hide QR Code" : "Show QR Code"}
-                </Button>
-              </div>
-              {showQR && (
-                <div className="mt-4 flex justify-center">
-                  <div className="flex flex-col items-center">
-                    <p>Or scan this QR code to pay</p>
-                    <QRCodeSVG value={getQRCodeValue()} size={200} />
-                  </div>
+            {!paymentSuccessful ? (
+              <div className="my-5">
+                <div className="flex space-x-2">
+                  <Button
+                    className="w-full"
+                    onClick={handleCryptoPayment}
+                    disabled={paymentLoading}
+                  >
+                    <Wallet className="mr-2 h-4 w-4" />
+                    {paymentLoading ? "Processing..." : `Pay with MetaMask`}
+                  </Button>
+                  <Button
+                    className="w-full"
+                    onClick={() => setShowQR(!showQR)}
+                    variant="outline"
+                  >
+                    <QrCode className="mr-2 h-4 w-4" />
+                    {showQR ? "Hide QR Code" : "Show QR Code"}
+                  </Button>
                 </div>
-              )}
-            </div>
+                {showQR && (
+                  <div className="mt-4 flex justify-center">
+                    <div className="flex flex-col items-center">
+                      <p>Or scan this QR code to pay</p>
+                      <QRCodeSVG value={getQRCodeValue()} size={200} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="my-5 flex w-full items-center justify-center">
+                <CheckIcon className="size-11 text-green-500"></CheckIcon>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+      {!paymentSuccessful ? (
+        <div></div>
+      ) : (
+        <div className="text-center text-3xl font-black text-green-500">
+          <h2>Payment Successful!</h2>
+          <p>Redirecting in {timeLeft} seconds...</p>
+        </div>
+      )}
     </div>
   );
 }
