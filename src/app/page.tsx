@@ -62,7 +62,7 @@ export default function Component() {
   const [paymentSuccessful, setPaymentSuccessful] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(10);
 
-  const router = useRouter(); 
+  const router = useRouter();
 
   useEffect(() => {
     if (paymentSuccessful && timeLeft > 0) {
@@ -220,17 +220,6 @@ export default function Component() {
           </CardHeader>
           <CardContent className="">
             <div>
-              <p className="mb-4">
-                Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
-              </p>
-              <p className="mb-4">
-                Amount to pay:
-                {selectedPlan
-                  ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
-                  : "0"}
-                ETH
-              </p>
-
               <Card>
                 <CardHeader>
                   <div className="flex w-full flex-row justify-between">
@@ -241,6 +230,16 @@ export default function Component() {
                   <CardDescription>chosen plan</CardDescription>
                 </CardHeader>
               </Card>
+              <p className="mb-4">
+                Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
+              </p>
+              <p className="mb-4">
+                Amount to pay:
+                {selectedPlan
+                  ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
+                  : "0"}
+                ETH
+              </p>
             </div>
             {!paymentSuccessful ? (
               <div className="my-5">
