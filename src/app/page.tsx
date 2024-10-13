@@ -78,7 +78,10 @@ export default function Component() {
   const recipientAddress = searchParams.get("recipientAddress");
   const PlanPrice = searchParams.get("PlanPrice");
   const PlanName = searchParams.get("PlanName");
-
+  const allowedNetworksCSV = searchParams.get("networks");
+  const allowedNetworks = allowedNetworksCSV
+    ? allowedNetworksCSV.split(",")
+    : [];
   const { toast } = useToast();
 
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -136,7 +139,13 @@ export default function Component() {
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data: Network[] = await response.json();
-      setNetworks(data.filter((network) => network.chain_identifier !== null));
+      setNetworks(
+        data.filter(
+          (network) =>
+            network.chain_identifier !== null &&
+            allowedNetworks.includes(network.name),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching networks:", error);
       setError("Failed to load networks. Please try again later.");
