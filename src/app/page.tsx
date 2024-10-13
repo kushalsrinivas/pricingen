@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import axios from "axios";
+import { Tabs, TabsTrigger, TabsList, TabsContent } from "@/components/ui/tabs";
+
 interface plansType {
   name: string;
   price: number;
@@ -74,7 +76,9 @@ export default function Component() {
         },
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const { hosted_url } = response.data.data; // Get the payment URL
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       window.location.href = hosted_url; // Redirect the user to the crypto payment page
     } catch (error) {
       console.error("Payment failed:", error);
@@ -133,54 +137,69 @@ export default function Component() {
           </CardFooter>
         </Card>
 
-        {/* <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Payment Details</CardTitle>
-            <CardDescription>
-              Enter your payment information to complete your purchase
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="grid w-full items-center gap-4">
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="name">Name on Card</Label>
-                  <Input id="name" placeholder="John Doe" />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="number">Card Number</Label>
-                  <Input id="number" placeholder="1234 5678 9012 3456" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="expiry">Expiry Date</Label>
-                    <Input id="expiry" placeholder="MM/YY" />
+        <Tabs className="w-full">
+          <TabsList className="w-full" defaultValue={"crypto"}>
+            <TabsTrigger className="w-full" value="crypto">
+              Crypto
+            </TabsTrigger>
+            <TabsTrigger className="w-full" value="Credit/Debit Card">
+              Credit/Debit Card
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="Credit/Debit Card">
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Payment Details</CardTitle>
+                <CardDescription>
+                  Enter your payment information to complete your purchase
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit}>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="name">Name on Card</Label>
+                      <Input id="name" placeholder="John Doe" />
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="number">Card Number</Label>
+                      <Input id="number" placeholder="1234 5678 9012 3456" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col space-y-1.5">
+                        <Label htmlFor="expiry">Expiry Date</Label>
+                        <Input id="expiry" placeholder="MM/YY" />
+                      </div>
+                      <div className="flex flex-col space-y-1.5">
+                        <Label htmlFor="cvc">CVC</Label>
+                        <Input id="cvc" placeholder="123" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="cvc">CVC</Label>
-                    <Input id="cvc" placeholder="123" />
-                  </div>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full" type="submit">
-              <CreditCard className="mr-2 h-4 w-4" /> Pay ${selectedPlan?.price}
-            </Button>
-          </CardFooter>
-        </Card> */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Proceed to Payment</CardTitle>
-            <CardDescription>Pay with cryptocurrency</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" onClick={handleSubmit}>
-              Pay with Crypto ${selectedPlan?.price}
-            </Button>
-          </CardContent>
-        </Card>
+                </form>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" type="submit">
+                  <CreditCard className="mr-2 h-4 w-4" /> Pay $
+                  {selectedPlan?.price}
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          <TabsContent value="crypto">
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Proceed to Payment</CardTitle>
+                <CardDescription>Pay with cryptocurrency</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" onClick={handleSubmit}>
+                  Pay with Crypto ${selectedPlan?.price}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
