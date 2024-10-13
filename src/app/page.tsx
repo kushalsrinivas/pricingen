@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import {
   Select,
   SelectContent,
@@ -289,7 +289,7 @@ export default function Component() {
             <CardContent className="space-y-4">
               <div className="bg-muted rounded-lg p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg">{PlanName}</span>
+                  <span className="text-lg font-bold">{PlanName}</span>
                   <span className="text-2xl font-bold">${PlanPrice}</span>
                 </div>
 
