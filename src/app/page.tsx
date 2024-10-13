@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Check, Wallet, QrCode, CheckIcon } from "lucide-react";
+import { Check, Wallet, QrCode, CheckIcon, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ethers } from "ethers";
 import {
@@ -162,130 +162,277 @@ export default function Component() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="mb-8 text-center text-3xl font-bold">Choose Your Plan</h1>
-      <div className="grid gap-8 md:grid-cols-2">
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Select a Plan</CardTitle>
-            <CardDescription>
-              Choose the plan that works best for you
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup
-              onValueChange={(value: string) => setSelectedPlan(plans[+value])}
-              value={plans
-                .findIndex((plan) => plan === selectedPlan)
-                .toString()}
-            >
-              {plans.map((plan, index) => (
-                <div
-                  key={plan.name}
-                  className="flex items-center space-x-2 space-y-2"
-                >
-                  <RadioGroupItem
-                    value={index.toString()}
-                    id={`plan-${index}`}
-                  />
-                  <Label htmlFor={`plan-${index}`} className="flex flex-col">
-                    <span className="text-lg font-semibold">{plan.name}</span>
-                    <span className="text-muted-foreground text-sm">
-                      ${plan.price}/month
-                    </span>
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </CardContent>
-          <CardFooter>
-            <div className="w-full">
-              <h3 className="mb-2 font-semibold">Features:</h3>
-              <ul>
-                {selectedPlan?.features.map((feature, index) => (
-                  <li key={index} className="flex items-center space-x-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>{feature}</span>
-                  </li>
+    <>
+      {/* <div className="container mx-auto p-4">
+        <h1 className="mb-8 text-center text-3xl font-bold">
+          Choose Your Plan
+        </h1>
+        <div className="grid gap-8 md:grid-cols-2">
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Select a Plan</CardTitle>
+              <CardDescription>
+                Choose the plan that works best for you
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup
+                onValueChange={(value: string) =>
+                  setSelectedPlan(plans[+value])
+                }
+                value={plans
+                  .findIndex((plan) => plan === selectedPlan)
+                  .toString()}
+              >
+                {plans.map((plan, index) => (
+                  <div
+                    key={plan.name}
+                    className="flex items-center space-x-2 space-y-2"
+                  >
+                    <RadioGroupItem
+                      value={index.toString()}
+                      id={`plan-${index}`}
+                    />
+                    <Label htmlFor={`plan-${index}`} className="flex flex-col">
+                      <span className="text-lg font-semibold">{plan.name}</span>
+                      <span className="text-muted-foreground text-sm">
+                        ${plan.price}/month
+                      </span>
+                    </Label>
+                  </div>
                 ))}
-              </ul>
-            </div>
-          </CardFooter>
-        </Card>
+              </RadioGroup>
+            </CardContent>
+            <CardFooter>
+              <div className="w-full">
+                <h3 className="mb-2 font-semibold">Features:</h3>
+                <ul>
+                  {selectedPlan?.features.map((feature, index) => (
+                    <li key={index} className="flex items-center space-x-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </CardFooter>
+          </Card>
 
-        <Card className="relative w-full">
-          <CardHeader>
-            <CardTitle>Proceed to Payment</CardTitle>
-            <CardDescription>Pay with cryptocurrency (ETH)</CardDescription>
-          </CardHeader>
-          <CardContent className="">
-            <div>
-              <Card>
-                <CardHeader>
-                  <div className="flex w-full flex-row justify-between">
-                    <CardTitle>{selectedPlan?.name}</CardTitle>
+          <Card className="relative w-full">
+            <CardHeader>
+              <CardTitle>Proceed to Payment</CardTitle>
+              <CardDescription>Pay with cryptocurrency (ETH)</CardDescription>
+            </CardHeader>
+            <CardContent className="">
+              <div>
+                <Card>
+                  <CardHeader>
+                    <div className="flex w-full flex-row justify-between">
+                      <CardTitle>{selectedPlan?.name}</CardTitle>
 
-                    <CardTitle>${selectedPlan?.price}</CardTitle>
-                  </div>
-                  <CardDescription>chosen plan</CardDescription>
-                </CardHeader>
-              </Card>
-              <p className="mb-4">
-                Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
-              </p>
-              <p className="mb-4">
-                Amount to pay:
-                {selectedPlan
-                  ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
-                  : "0"}
-                ETH
-              </p>
-            </div>
-            {!paymentSuccessful ? (
-              <div className="my-5">
-                <div className="flex space-x-2">
-                  <Button
-                    className="w-full"
-                    onClick={handleCryptoPayment}
-                    disabled={paymentLoading}
-                  >
-                    <Wallet className="mr-2 h-4 w-4" />
-                    {paymentLoading ? "Processing..." : `Pay with MetaMask`}
-                  </Button>
-                  <Button
-                    className="w-full"
-                    onClick={() => setShowQR(!showQR)}
-                    variant="outline"
-                  >
-                    <QrCode className="mr-2 h-4 w-4" />
-                    {showQR ? "Hide QR Code" : "Show QR Code"}
-                  </Button>
-                </div>
-                {showQR && (
-                  <div className="mt-4 flex justify-center">
-                    <div className="flex flex-col items-center">
-                      <p>Or scan this QR code to pay</p>
-                      <QRCodeSVG value={getQRCodeValue()} size={200} />
+                      <CardTitle>${selectedPlan?.price}</CardTitle>
                     </div>
+                    <CardDescription>chosen plan</CardDescription>
+                  </CardHeader>
+                </Card>
+                <p className="mb-4">
+                  Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
+                </p>
+                <p className="mb-4">
+                  Amount to pay:
+                  {selectedPlan
+                    ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
+                    : "0"}
+                  ETH
+                </p>
+              </div>
+              {!paymentSuccessful ? (
+                <div className="my-5">
+                  <div className="flex space-x-2">
+                    <Button
+                      className="w-full"
+                      onClick={handleCryptoPayment}
+                      disabled={paymentLoading}
+                    >
+                      <Wallet className="mr-2 h-4 w-4" />
+                      {paymentLoading ? "Processing..." : `Pay with MetaMask`}
+                    </Button>
+                    <Button
+                      className="w-full"
+                      onClick={() => setShowQR(!showQR)}
+                      variant="outline"
+                    >
+                      <QrCode className="mr-2 h-4 w-4" />
+                      {showQR ? "Hide QR Code" : "Show QR Code"}
+                    </Button>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="my-5 flex w-full items-center justify-center">
-                <CheckIcon className="size-11 text-green-500"></CheckIcon>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      {!paymentSuccessful ? (
-        <div></div>
-      ) : (
-        <div className="text-center text-3xl font-black text-green-500">
-          <h2>Payment Successful!</h2>
-          <p>Redirecting in {timeLeft} seconds...</p>
+                  {showQR && (
+                    <div className="mt-4 flex justify-center">
+                      <div className="flex flex-col items-center">
+                        <p>Or scan this QR code to pay</p>
+                        <QRCodeSVG value={getQRCodeValue()} size={200} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="my-5 flex w-full items-center justify-center">
+                  <CheckIcon className="size-11 text-green-500"></CheckIcon>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      )}
-    </div>
+        {!paymentSuccessful ? (
+          <div></div>
+        ) : (
+          <div className="text-center text-3xl font-black text-green-500">
+            <h2>Payment Successful!</h2>
+            <p>Redirecting in {timeLeft} seconds...</p>
+          </div>
+        )}
+      </div> */}
+      <div className="container mx-auto max-w-4xl p-4">
+        <h1 className="mb-8 text-center text-4xl font-bold">
+          Choose Your Plan
+        </h1>
+        <div className="grid gap-8 md:grid-cols-2">
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Select a Plan</CardTitle>
+              <CardDescription>
+                Choose the plan that works best for you
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup
+                onValueChange={(value: string) =>
+                  setSelectedPlan(plans[+value])
+                }
+                value={plans
+                  .findIndex((plan) => plan === selectedPlan)
+                  .toString()}
+                defaultValue="2"
+                className="space-y-4"
+              >
+                {plans.map((plan, index) => (
+                  <div
+                    key={plan.name}
+                    className={`flex items-center space-x-2 rounded-lg p-4 transition-colors ${selectedPlan?.name === plan.name ? "bg-primary/10" : "hover:bg-muted"}`}
+                  >
+                    <RadioGroupItem
+                      value={index.toString()}
+                      id={`plan-${index}`}
+                    />
+                    <Label
+                      htmlFor={`plan-${index}`}
+                      className="flex flex-grow cursor-pointer flex-col"
+                    >
+                      <span className="text-lg font-semibold">{plan.name}</span>
+                      <span className="text-2xl font-bold">
+                        ${plan.price}/month
+                      </span>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </CardContent>
+            <CardFooter>
+              <div className="w-full">
+                <h3 className="mb-2 font-semibold">Features:</h3>
+                <ul className="space-y-2">
+                  {selectedPlan?.features.map((feature, index) => (
+                    <li key={index} className="flex items-center space-x-2">
+                      <Check className="h-5 w-5 text-green-500" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </CardFooter>
+          </Card>
+
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Proceed to Payment</CardTitle>
+              <CardDescription>Pay with cryptocurrency (ETH)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-muted rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg">{selectedPlan?.name}</span>
+                  <span className="text-2xl font-bold">
+                    ${selectedPlan?.price}
+                  </span>
+                </div>
+
+                <div className="text-muted-foreground text-sm">chosen plan</div>
+              </div>
+              <div>
+                <div className="font-semibold">
+                  Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
+                </div>
+                <div className="text-lg">
+                  Amount to pay:
+                  <span className="font-bold">
+                    {selectedPlan
+                      ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
+                      : "0"}
+                    ETH
+                  </span>
+                </div>
+              </div>
+              {!paymentSuccessful ? (
+                <div>
+                  {showQR ? (
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="bg-muted flex h-48 w-48 items-center justify-center">
+                        <QRCodeSVG value={getQRCodeValue()} size={200} />
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowQR(false)}
+                      >
+                        Hide QR Code
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button
+                        className="w-full"
+                        onClick={handleCryptoPayment}
+                        disabled={paymentLoading}
+                      >
+                        <Wallet className="mr-2 h-4 w-4" />
+                        {paymentLoading ? "Processing..." : `Pay with MetaMask`}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setShowQR(true)}
+                      >
+                        <QrCode className="mr-2 h-5 w-5" /> Show QR Code
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="my-5 flex w-full items-center justify-center">
+                  <CheckIcon className="size-11 text-green-500"></CheckIcon>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        {!paymentSuccessful ? (
+          <div></div>
+        ) : (
+          <div className="text-center text-3xl font-black text-green-500">
+            <h2>Payment Successful!</h2>
+            <p>Redirecting in {timeLeft} seconds...</p>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
