@@ -27,7 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface plansType {
   name: string;
@@ -72,11 +72,13 @@ const plans: plansType[] = [
 
 export default function Component() {
   //replace this
-  const recipientAddress = "0x1234567890123456789012345678901234567890";
+  // const recipientAddress = "0x1234567890123456789012345678901234567890";
+  const searchParams = useSearchParams();
+  const redirecturl = searchParams.get("redirecturl");
+  const recipientAddress = searchParams.get("recipientAddress");
+  const PlanPrice = searchParams.get("PlanPrice");
+  const PlanName = searchParams.get("PlanName");
 
-  const [selectedPlan, setSelectedPlan] = useState<plansType | undefined>(
-    plans[0],
-  );
   const { toast } = useToast();
 
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -94,7 +96,7 @@ export default function Component() {
 
       return () => clearInterval(timer);
     } else if (timeLeft === 0) {
-      router.push("/new-url"); // Replace with the actual URL you want to redirect to
+      router.push(redirecturl!); // Replace with the actual URL you want to redirect to
     }
   }, [paymentSuccessful, timeLeft, router]);
 
@@ -185,7 +187,7 @@ export default function Component() {
     setSelectedToken(value);
   };
   const handleCryptoPayment = async () => {
-    if (!selectedPlan || !selectedToken) return;
+    if (!selectedToken) return;
 
     setPaymentLoading(true);
     try {
@@ -199,7 +201,7 @@ export default function Component() {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const signer = await provider.getSigner();
 
-        const amountInToken = selectedPlan.price / tokenPrice!;
+        const amountInToken = Number(PlanPrice) / tokenPrice!;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
         const amountInWei = ethers.parseEther(amountInToken.toFixed(18));
 
@@ -213,7 +215,7 @@ export default function Component() {
 
         toast({
           title: "Payment Successful",
-          description: `You have successfully paid ${amountInToken.toFixed(6)} ETH for the ${selectedPlan.name} plan.`,
+          description: `You have successfully paid ${amountInToken.toFixed(6)} ETH for the ${PlanName} plan.`,
         });
         handlePaymentSuccess();
       } else {
@@ -232,8 +234,8 @@ export default function Component() {
   };
 
   const getQRCodeValue = () => {
-    if (!selectedPlan || !tokenPrice) return "";
-    const amountInEth = selectedPlan.price / tokenPrice;
+    if (!tokenPrice) return "";
+    const amountInEth = Number(PlanPrice) / tokenPrice;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return `${selectedToken}:${recipientAddress}?value=${ethers.parseEther(
       amountInEth.toFixed(18),
@@ -265,66 +267,11 @@ export default function Component() {
   }, []);
   return (
     <>
-      <div className="container mx-auto max-w-4xl p-4">
+      <div className="container mx-auto max-w-lg p-4">
         <h1 className="mb-8 text-center text-4xl font-bold">
           Choose Your Plan
         </h1>
-        <div className="grid gap-8 md:grid-cols-2">
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Select a Plan</CardTitle>
-              <CardDescription>
-                Choose the plan that works best for you
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup
-                onValueChange={(value: string) =>
-                  setSelectedPlan(plans[+value])
-                }
-                value={plans
-                  .findIndex((plan) => plan === selectedPlan)
-                  .toString()}
-                defaultValue="2"
-                className="space-y-4"
-              >
-                {plans.map((plan, index) => (
-                  <div
-                    key={plan.name}
-                    className={`flex items-center space-x-2 rounded-lg p-4 transition-colors ${selectedPlan?.name === plan.name ? "bg-primary/10" : "hover:bg-muted"}`}
-                  >
-                    <RadioGroupItem
-                      value={index.toString()}
-                      id={`plan-${index}`}
-                    />
-                    <Label
-                      htmlFor={`plan-${index}`}
-                      className="flex flex-grow cursor-pointer flex-col"
-                    >
-                      <span className="text-lg font-semibold">{plan.name}</span>
-                      <span className="text-2xl font-bold">
-                        ${plan.price}/month
-                      </span>
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </CardContent>
-            <CardFooter>
-              <div className="w-full">
-                <h3 className="mb-2 font-semibold">Features:</h3>
-                <ul className="space-y-2">
-                  {selectedPlan?.features.map((feature, index) => (
-                    <li key={index} className="flex items-center space-x-2">
-                      <Check className="h-5 w-5 text-green-500" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </CardFooter>
-          </Card>
-
+        <div className="">
           <Card className="w-full">
             <CardHeader>
               <CardTitle>Proceed to Payment</CardTitle>
@@ -333,10 +280,8 @@ export default function Component() {
             <CardContent className="space-y-4">
               <div className="bg-muted rounded-lg p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg">{selectedPlan?.name}</span>
-                  <span className="text-2xl font-bold">
-                    ${selectedPlan?.price}
-                  </span>
+                  <span className="text-lg">{PlanName}</span>
+                  <span className="text-2xl font-bold">${PlanPrice}</span>
                 </div>
 
                 <div className="text-muted-foreground text-sm">chosen plan</div>
