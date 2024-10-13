@@ -1,8 +1,8 @@
 "use client";
-
-import { useState } from "react";
-import { Check, CreditCard } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Check, Wallet, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ethers } from "ethers";
 import {
   Card,
   CardContent,
@@ -11,33 +11,39 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import axios from "axios";
-import { Tabs, TabsTrigger, TabsList, TabsContent } from "@/components/ui/tabs";
+
+import { useToast } from "@/hooks/use-toast";
+import { QRCodeSVG } from "qrcode.react";
 
 interface plansType {
   name: string;
   price: number;
   features: string[];
 }
+interface CryptoPriceResponse {
+  ethereum: {
+    usd: number;
+  };
+}
 
 const plans: plansType[] = [
   {
     name: "Basic",
     price: 10,
-    features: ["1 user", "10GB storage", "Email support"],
+    features: ["feature 1", "feature 1", "feature 1"],
   },
   {
     name: "Pro",
     price: 20,
-    features: ["5 users", "50GB storage", "Priority email support"],
+    features: ["feature 1", "feature 1", "feature 1"],
   },
   {
     name: "Enterprise",
     price: 50,
-    features: ["Unlimited users", "500GB storage", "24/7 phone support"],
+    features: ["feature 1", "feature 1", "feature 1"],
   },
 ];
 
@@ -45,44 +51,96 @@ export default function Component() {
   const [selectedPlan, setSelectedPlan] = useState<plansType | undefined>(
     plans[0],
   );
+  const { toast } = useToast();
+  const [ethPrice, setEthPrice] = useState<number | undefined>();
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  // Replace with your actual wallet address
+  const recipientAddress = "0x1234567890123456789012345678901234567890";
 
-    if (!selectedPlan) {
-      console.log("No plan selected");
-      return;
-    }
+  useEffect(() => {
+    const fetchEthPrice = async () => {
+      try {
+        const response = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
+        );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const data: CryptoPriceResponse = await response.json();
+
+        // Now the `ethereum` object and its properties are typed properly
+        setEthPrice(data.ethereum.usd);
+      } catch (error) {
+        console.error("Failed to fetch ETH price:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch ETH price. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    };
+    void fetchEthPrice();
+  }, []);
+
+  const handleCryptoPayment = async () => {
+    if (!selectedPlan || !ethPrice) return;
+
+    setPaymentLoading(true);
     try {
-      // Create a charge in Coinbase Commerce
-      const response = await axios.post(
-        "https://api.commerce.coinbase.com/charges",
-        {
-          name: `${selectedPlan.name} Plan`,
-          description: `Subscription for ${selectedPlan.name} plan`,
-          local_price: {
-            amount: selectedPlan.price.toString(),
-            currency: "USD", // Change this if using a different fiat currency
-          },
-          pricing_type: "fixed_price",
-          redirect_url: "https://yourapp.com/payment-success", // Redirect URL after successful payment
-          cancel_url: "https://yourapp.com/payment-cancel", // Redirect URL after cancellation
-        },
-        {
-          headers: {
-            "X-CC-Api-Key": "YOUR_COINBASE_COMMERCE_API_KEY", // Replace with your Coinbase API key
-          },
-        },
-      );
+      if (typeof window.ethereum !== "undefined") {
+        // Request account access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        await window.ethereum.request({ method: "eth_requestAccounts" });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const { hosted_url } = response.data.data; // Get the payment URL
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      window.location.href = hosted_url; // Redirect the user to the crypto payment page
+        // Create a new Web3Provider
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const provider = new ethers.BrowserProvider(window.ethereum);
+
+        // Get the signer
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const signer = await provider.getSigner();
+
+        const amountInEth = selectedPlan.price / ethPrice;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const amountInWei = ethers.parseEther(amountInEth.toFixed(18));
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const tx = await signer.sendTransaction({
+          to: recipientAddress,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          value: amountInWei,
+        });
+
+        await tx.wait();
+
+        toast({
+          title: "Payment Successful",
+          description: `You have successfully paid ${amountInEth.toFixed(6)} ETH for the ${selectedPlan.name} plan.`,
+        });
+      } else {
+        throw new Error("MetaMask is not installed");
+      }
     } catch (error) {
       console.error("Payment failed:", error);
+      toast({
+        title: "Payment Failed",
+        description:
+          "There was an error processing your payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPaymentLoading(false);
     }
+  };
+
+  const getQRCodeValue = () => {
+    if (!selectedPlan || !ethPrice) return "";
+    const amountInEth = selectedPlan.price / ethPrice;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    return `ethereum:${recipientAddress}?value=${ethers.parseEther(
+      amountInEth.toFixed(18),
+    )}`;
   };
 
   return (
@@ -98,10 +156,10 @@ export default function Component() {
           </CardHeader>
           <CardContent>
             <RadioGroup
-              onValueChange={(value: string) => setSelectedPlan(plans[+value])} // Using unary + to convert string to number
+              onValueChange={(value: string) => setSelectedPlan(plans[+value])}
               value={plans
                 .findIndex((plan) => plan === selectedPlan)
-                .toString()} // Ensuring the selected value stays in sync
+                .toString()}
             >
               {plans.map((plan, index) => (
                 <div
@@ -137,69 +195,63 @@ export default function Component() {
           </CardFooter>
         </Card>
 
-        <Tabs className="w-full">
-          <TabsList className="w-full" defaultValue={"crypto"}>
-            <TabsTrigger className="w-full" value="crypto">
-              Crypto
-            </TabsTrigger>
-            <TabsTrigger className="w-full" value="Credit/Debit Card">
-              Credit/Debit Card
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="Credit/Debit Card">
-            <Card className="w-full">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Proceed to Payment</CardTitle>
+            <CardDescription>Pay with cryptocurrency (ETH)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">
+              Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
+            </p>
+            <p className="mb-4">
+              Amount to pay:
+              {selectedPlan
+                ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
+                : "0"}{" "}
+              ETH
+            </p>
+
+            <Card>
               <CardHeader>
-                <CardTitle>Payment Details</CardTitle>
-                <CardDescription>
-                  Enter your payment information to complete your purchase
-                </CardDescription>
+                <div className="flex w-full flex-row justify-between">
+                  <CardTitle>{selectedPlan?.name}</CardTitle>
+
+                  <CardTitle>${selectedPlan?.price}</CardTitle>
+                </div>
+                <CardDescription>chosen plan</CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit}>
-                  <div className="grid w-full items-center gap-4">
-                    <div className="flex flex-col space-y-1.5">
-                      <Label htmlFor="name">Name on Card</Label>
-                      <Input id="name" placeholder="John Doe" />
-                    </div>
-                    <div className="flex flex-col space-y-1.5">
-                      <Label htmlFor="number">Card Number</Label>
-                      <Input id="number" placeholder="1234 5678 9012 3456" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col space-y-1.5">
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input id="expiry" placeholder="MM/YY" />
-                      </div>
-                      <div className="flex flex-col space-y-1.5">
-                        <Label htmlFor="cvc">CVC</Label>
-                        <Input id="cvc" placeholder="123" />
-                      </div>
-                    </div>
+            </Card>
+            <div className="my-5">
+              <div className="flex space-x-2">
+                <Button
+                  className="w-full"
+                  onClick={handleCryptoPayment}
+                  disabled={paymentLoading}
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  {paymentLoading ? "Processing..." : `Pay with MetaMask`}
+                </Button>
+                <Button
+                  className="w-full"
+                  onClick={() => setShowQR(!showQR)}
+                  variant="outline"
+                >
+                  <QrCode className="mr-2 h-4 w-4" />
+                  {showQR ? "Hide QR Code" : "Show QR Code"}
+                </Button>
+              </div>
+              {showQR && (
+                <div className="mt-4 flex justify-center">
+                  <div className="flex flex-col items-center">
+                    <p>Or scan this QR code to pay</p>
+                    <QRCodeSVG value={getQRCodeValue()} size={200} />
                   </div>
-                </form>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" type="submit">
-                  <CreditCard className="mr-2 h-4 w-4" /> Pay $
-                  {selectedPlan?.price}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          <TabsContent value="crypto">
-            <Card className="w-full">
-              <CardHeader>
-                <CardTitle>Proceed to Payment</CardTitle>
-                <CardDescription>Pay with cryptocurrency</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" onClick={handleSubmit}>
-                  Pay with Crypto ${selectedPlan?.price}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
