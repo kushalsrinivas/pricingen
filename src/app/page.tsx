@@ -38,16 +38,19 @@ const plans: plansType[] = [
   {
     name: "Pro",
     price: 20,
-    features: ["feature 1", "feature 1", "feature 1"],
+    features: ["feature 2", "feature 2", "feature 2"],
   },
   {
     name: "Enterprise",
     price: 50,
-    features: ["feature 1", "feature 1", "feature 1"],
+    features: ["feature 3", "feature 3", "feature 3"],
   },
 ];
 
 export default function Component() {
+  //replace this
+  const recipientAddress = "0x1234567890123456789012345678901234567890";
+
   const [selectedPlan, setSelectedPlan] = useState<plansType | undefined>(
     plans[0],
   );
@@ -57,7 +60,6 @@ export default function Component() {
   const [showQR, setShowQR] = useState(false);
 
   // Replace with your actual wallet address
-  const recipientAddress = "0x1234567890123456789012345678901234567890";
 
   useEffect(() => {
     const fetchEthPrice = async () => {
@@ -89,15 +91,12 @@ export default function Component() {
     setPaymentLoading(true);
     try {
       if (typeof window.ethereum !== "undefined") {
-        // Request account access
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await window.ethereum.request({ method: "eth_requestAccounts" });
 
-        // Create a new Web3Provider
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const provider = new ethers.BrowserProvider(window.ethereum);
 
-        // Get the signer
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const signer = await provider.getSigner();
 
@@ -195,33 +194,35 @@ export default function Component() {
           </CardFooter>
         </Card>
 
-        <Card className="w-full">
+        <Card className="relative w-full">
           <CardHeader>
             <CardTitle>Proceed to Payment</CardTitle>
             <CardDescription>Pay with cryptocurrency (ETH)</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="mb-4">
-              Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
-            </p>
-            <p className="mb-4">
-              Amount to pay:
-              {selectedPlan
-                ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
-                : "0"}{" "}
-              ETH
-            </p>
+          <CardContent className="">
+            <div>
+              <p className="mb-4">
+                Current ETH price: ${ethPrice?.toFixed(2) ?? "Loading..."}
+              </p>
+              <p className="mb-4">
+                Amount to pay:
+                {selectedPlan
+                  ? (selectedPlan.price / (ethPrice ?? 1)).toFixed(6)
+                  : "0"}
+                ETH
+              </p>
 
-            <Card>
-              <CardHeader>
-                <div className="flex w-full flex-row justify-between">
-                  <CardTitle>{selectedPlan?.name}</CardTitle>
+              <Card>
+                <CardHeader>
+                  <div className="flex w-full flex-row justify-between">
+                    <CardTitle>{selectedPlan?.name}</CardTitle>
 
-                  <CardTitle>${selectedPlan?.price}</CardTitle>
-                </div>
-                <CardDescription>chosen plan</CardDescription>
-              </CardHeader>
-            </Card>
+                    <CardTitle>${selectedPlan?.price}</CardTitle>
+                  </div>
+                  <CardDescription>chosen plan</CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
             <div className="my-5">
               <div className="flex space-x-2">
                 <Button
