@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
+
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -287,15 +287,15 @@ export default function Component() {
               <CardDescription>Pay with cryptocurrency (ETH)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-muted rounded-lg p-4">
+              <div className="rounded-lg bg-muted p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold">{PlanName}</span>
                   <span className="text-2xl font-bold">${PlanPrice}</span>
                 </div>
 
-                <div className="text-muted-foreground text-sm">chosen plan</div>
+                <div className="text-sm text-muted-foreground">chosen plan</div>
               </div>
-              <div className="bg-card mx-auto w-full max-w-md space-y-6 rounded-lg p-6 shadow-md">
+              <div className="mx-auto w-full max-w-md space-y-6 rounded-lg bg-card p-6 shadow-md">
                 <div className="space-y-2">
                   <Label htmlFor="network-select">Select Network</Label>
                   {loading && !selectedNetwork ? (
@@ -352,7 +352,7 @@ export default function Component() {
                 )}
 
                 {selectedNetwork && selectedToken && (
-                  <div className="bg-muted rounded-md p-4">
+                  <div className="rounded-md bg-muted p-4">
                     <p className="font-semibold">Selected:</p>
                     <p>
                       Network:{" "}
@@ -370,7 +370,7 @@ export default function Component() {
                 <div>
                   {showQR ? (
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="bg-muted flex h-48 w-48 items-center justify-center">
+                      <div className="flex h-48 w-48 items-center justify-center bg-muted">
                         <QRCodeSVG value={getQRCodeValue()} size={200} />
                       </div>
                       <Button
