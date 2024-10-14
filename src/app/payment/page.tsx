@@ -72,6 +72,22 @@ export default function Component() {
 
   const router = useRouter();
 
+  const cryptoOptions = ["bitcoin", "ethereum", "solana", "others"];
+  const [networks, setNetworks] = useState<Network[]>([]);
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<string>("");
+  const [selectedToken, setSelectedToken] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tokenPrice, setTokenPrice] = useState<number | undefined>();
+  useEffect(() => {
+    void fetchNetworks();
+  }, []);
+  useEffect(() => {
+    if (selectedNetwork) {
+      void fetchTokensByNetwork(selectedNetwork);
+    }
+  }, [selectedNetwork]);
   useEffect(() => {
     if (paymentSuccessful && timeLeft > 0) {
       const timer = setInterval(() => {
@@ -87,26 +103,6 @@ export default function Component() {
   const handlePaymentSuccess = () => {
     setPaymentSuccessful(true);
   };
-  const [selectedCrypto, setSelectedCrypto] = useState("");
-
-  const cryptoOptions = ["bitcoin", "ethereum", "solana", "others"];
-  const [networks, setNetworks] = useState<Network[]>([]);
-  const [tokens, setTokens] = useState<Token[]>([]);
-  const [selectedNetwork, setSelectedNetwork] = useState<string>("");
-  const [selectedToken, setSelectedToken] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tokenPrice, setTokenPrice] = useState<number | undefined>();
-  useEffect(() => {
-    void fetchNetworks();
-  }, []);
-
-  useEffect(() => {
-    if (selectedNetwork) {
-      void fetchTokensByNetwork(selectedNetwork);
-    }
-  }, [selectedNetwork]);
-
   const fetchNetworks = async (): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -228,6 +224,7 @@ export default function Component() {
   const getQRCodeValue = () => {
     if (!tokenPrice) return "";
     const amountInEth = Number(PlanPrice) / tokenPrice;
+    //need to change this for difffernt tokens
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return `${selectedToken}:${recipientAddress}?value=${ethers.parseEther(
       amountInEth.toFixed(18),
@@ -238,13 +235,13 @@ export default function Component() {
     const fetchTokenPrice = async () => {
       try {
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${selectedToken}&vs_currencies=usd`,
+          `https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd`,
         );
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const data: CryptoPriceResponse = await response.json();
 
-        // Now the `ethereum` object and its properties are typed properly
+        //need to change this aswell
         setTokenPrice(data.ethereum.usd);
       } catch (error) {
         console.error("Failed to fetch ETH price:", error);
@@ -256,7 +253,7 @@ export default function Component() {
       }
     };
     void fetchTokenPrice();
-  }, []);
+  }, [selectedToken]);
   return (
     <>
       <div className="container mx-auto max-w-lg p-4">
@@ -369,7 +366,7 @@ export default function Component() {
               <div className="rounded-lg bg-muted p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold">{selectedToken}</span>
-                  <span className="text-2xl font-bold">token price</span>
+                  <span className="text-2xl font-bold">{}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
                   cmp of the token
