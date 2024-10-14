@@ -292,104 +292,89 @@ export default function Component() {
               </div>
 
               {selectedToken === "others" && (
-                <div className="space-y-4">
-                  <Select onValueChange={setSelectedNetwork}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Network" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ethereum">Ethereum</SelectItem>
-                      <SelectItem value="polygon">Polygon</SelectItem>
-                      <SelectItem value="binance">
-                        Binance Smart Chain
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="mx-auto w-full max-w-md space-y-6 rounded-lg bg-card p-6 shadow-md">
+                  <div className="space-y-2">
+                    <Label htmlFor="network-select">Select Network</Label>
+                    {loading && !selectedNetwork ? (
+                      <Skeleton className="h-10 w-full" />
+                    ) : (
+                      <Select
+                        onValueChange={handleNetworkChange}
+                        value={selectedNetwork}
+                      >
+                        <SelectTrigger id="network-select">
+                          <SelectValue placeholder="Choose a network" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {networks.map((network) => (
+                            <SelectItem key={network.id} value={network.id}>
+                              {network.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
 
-                  <Select onValueChange={setSelectedToken}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Token" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="eth">ETH</SelectItem>
-                      <SelectItem value="usdt">USDT</SelectItem>
-                      <SelectItem value="usdc">USDC</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Label htmlFor="token-select">Select Token</Label>
+                    {loading && selectedNetwork ? (
+                      <Skeleton className="h-10 w-full" />
+                    ) : (
+                      <Select
+                        onValueChange={handleTokenChange}
+                        value={selectedToken}
+                        disabled={!selectedNetwork}
+                      >
+                        <SelectTrigger id="token-select">
+                          <SelectValue placeholder="Choose a token" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tokens.map((token) => (
+                            <SelectItem key={token.id} value={token.id}>
+                              {token.symbol} - {token.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {selectedNetwork && selectedToken && (
+                    <div className="rounded-md bg-muted p-4">
+                      <p className="font-semibold">Selected:</p>
+                      <p>
+                        Network:{" "}
+                        {networks.find((n) => n.id === selectedNetwork)?.name}
+                      </p>
+                      <p>
+                        Token:{" "}
+                        {tokens.find((t) => t.id === selectedToken)?.name} (
+                        {tokens.find((t) => t.id === selectedToken)?.symbol})
+                      </p>
+                      <p>Price : {tokenPrice}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* <div className="mx-auto w-full max-w-md space-y-6 rounded-lg bg-card p-6 shadow-md">
-                <div className="space-y-2">
-                  <Label htmlFor="network-select">Select Network</Label>
-                  {loading && !selectedNetwork ? (
-                    <Skeleton className="h-10 w-full" />
-                  ) : (
-                    <Select
-                      onValueChange={handleNetworkChange}
-                      value={selectedNetwork}
-                    >
-                      <SelectTrigger id="network-select">
-                        <SelectValue placeholder="Choose a network" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {networks.map((network) => (
-                          <SelectItem key={network.id} value={network.id}>
-                            {network.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+              <div className="rounded-lg bg-muted p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold">{selectedToken}</span>
+                  <span className="text-2xl font-bold">token price</span>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="token-select">Select Token</Label>
-                  {loading && selectedNetwork ? (
-                    <Skeleton className="h-10 w-full" />
-                  ) : (
-                    <Select
-                      onValueChange={handleTokenChange}
-                      value={selectedToken}
-                      disabled={!selectedNetwork}
-                    >
-                      <SelectTrigger id="token-select">
-                        <SelectValue placeholder="Choose a token" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {tokens.map((token) => (
-                          <SelectItem key={token.id} value={token.id}>
-                            {token.symbol} - {token.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                <div className="text-sm text-muted-foreground">
+                  cmp of the token
                 </div>
-
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                {selectedNetwork && selectedToken && (
-                  <div className="rounded-md bg-muted p-4">
-                    <p className="font-semibold">Selected:</p>
-                    <p>
-                      Network:{" "}
-                      {networks.find((n) => n.id === selectedNetwork)?.name}
-                    </p>
-                    <p>
-                      Token: {tokens.find((t) => t.id === selectedToken)?.name}{" "}
-                      ({tokens.find((t) => t.id === selectedToken)?.symbol})
-                    </p>
-                    <p>Price : {tokenPrice}</p>
-                  </div>
-                )}
-              </div> */}
+              </div>
               {!paymentSuccessful ? (
                 <div>
                   {showQR ? (
