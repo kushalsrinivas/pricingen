@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -52,24 +51,6 @@ interface Token {
   platforms: Record<string, string>;
 }
 
-const plans: plansType[] = [
-  {
-    name: "Basic",
-    price: 10,
-    features: ["feature 1", "feature 1", "feature 1"],
-  },
-  {
-    name: "Pro",
-    price: 20,
-    features: ["feature 2", "feature 2", "feature 2"],
-  },
-  {
-    name: "Enterprise",
-    price: 50,
-    features: ["feature 3", "feature 3", "feature 3"],
-  },
-];
-
 export default function Component() {
   //replace this
   // const recipientAddress = "0x1234567890123456789012345678901234567890";
@@ -106,7 +87,9 @@ export default function Component() {
   const handlePaymentSuccess = () => {
     setPaymentSuccessful(true);
   };
+  const [selectedCrypto, setSelectedCrypto] = useState("");
 
+  const cryptoOptions = ["bitcoin", "ethereum", "solana", "others"];
   const [networks, setNetworks] = useState<Network[]>([]);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string>("");
@@ -295,7 +278,48 @@ export default function Component() {
 
                 <div className="text-sm text-muted-foreground">chosen plan</div>
               </div>
-              <div className="mx-auto w-full max-w-md space-y-6 rounded-lg bg-card p-6 shadow-md">
+              <div className="grid grid-cols-2 gap-4">
+                {cryptoOptions.map((crypto) => (
+                  <Button
+                    key={crypto}
+                    variant={selectedCrypto === crypto ? "default" : "outline"}
+                    className="h-16 w-full text-sm font-medium capitalize"
+                    onClick={() => setSelectedCrypto(crypto)}
+                  >
+                    {crypto}
+                  </Button>
+                ))}
+              </div>
+
+              {selectedCrypto === "others" && (
+                <div className="space-y-4">
+                  <Select onValueChange={setSelectedNetwork}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Network" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ethereum">Ethereum</SelectItem>
+                      <SelectItem value="polygon">Polygon</SelectItem>
+                      <SelectItem value="binance">
+                        Binance Smart Chain
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select onValueChange={setSelectedToken}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Token" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="eth">ETH</SelectItem>
+                      <SelectItem value="usdt">USDT</SelectItem>
+                      <SelectItem value="usdc">USDC</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* <div className="mx-auto w-full max-w-md space-y-6 rounded-lg bg-card p-6 shadow-md">
                 <div className="space-y-2">
                   <Label htmlFor="network-select">Select Network</Label>
                   {loading && !selectedNetwork ? (
@@ -365,7 +389,7 @@ export default function Component() {
                     <p>Price : {tokenPrice}</p>
                   </div>
                 )}
-              </div>
+              </div> */}
               {!paymentSuccessful ? (
                 <div>
                   {showQR ? (
