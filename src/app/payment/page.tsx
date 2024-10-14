@@ -79,7 +79,7 @@ export default function Component() {
   const [selectedToken, setSelectedToken] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [tokenPrice, setTokenPrice] = useState<number | undefined>();
+  const [tokenPrice, setTokenPrice] = useState<number | undefined>(1000);
   useEffect(() => {
     void fetchNetworks();
   }, []);
@@ -242,7 +242,7 @@ export default function Component() {
         const data: CryptoPriceResponse = await response.json();
 
         //need to change this aswell
-        setTokenPrice(data.ethereum.usd);
+        setTokenPrice(1000);
       } catch (error) {
         console.error("Failed to fetch ETH price:", error);
         toast({
@@ -366,7 +366,9 @@ export default function Component() {
               <div className="rounded-lg bg-muted p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold">{selectedToken}</span>
-                  <span className="text-2xl font-bold">{}</span>
+                  <span className="text-2xl font-bold">
+                    {Number(PlanPrice) / tokenPrice!}
+                  </span>
                 </div>
                 <div className="text-sm text-muted-foreground">
                   cmp of the token
