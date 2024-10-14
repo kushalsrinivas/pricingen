@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { Check, Wallet, QrCode, CheckIcon, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ethers } from "ethers";
@@ -51,7 +51,7 @@ interface Token {
   platforms: Record<string, string>;
 }
 
-export default function Component() {
+function PaymentComponent() {
   //replace this
   // const recipientAddress = "0x1234567890123456789012345678901234567890";
   const searchParams = useSearchParams();
@@ -426,5 +426,12 @@ export default function Component() {
         )}
       </div>
     </>
+  );
+}
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentComponent />
+    </Suspense>
   );
 }

@@ -1,15 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useUser } from "../Context/UserContext";
-import { useRouter } from "next/navigation";
-import {
-  PlusCircle,
-  CreditCard,
-  ChevronDown,
-  ChevronUp,
-  Trash2,
-} from "lucide-react";
+import { useState } from "react";
+
+import { PlusCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
