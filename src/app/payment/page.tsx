@@ -282,16 +282,16 @@ export default function Component() {
                 {cryptoOptions.map((crypto) => (
                   <Button
                     key={crypto}
-                    variant={selectedCrypto === crypto ? "default" : "outline"}
+                    variant={selectedToken === crypto ? "default" : "outline"}
                     className="h-16 w-full text-sm font-medium capitalize"
-                    onClick={() => setSelectedCrypto(crypto)}
+                    onClick={() => setSelectedToken(crypto)}
                   >
                     {crypto}
                   </Button>
                 ))}
               </div>
 
-              {selectedCrypto === "others" && (
+              {selectedToken === "others" && (
                 <div className="space-y-4">
                   <Select onValueChange={setSelectedNetwork}>
                     <SelectTrigger>
