@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useUser } from "../Context/UserContext";
+import { useRouter } from "next/navigation";
 import {
   PlusCircle,
   CreditCard,
@@ -26,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ConnectButton from "@/components/modals/LoginForm";
 
 type PaymentGateway = {
   id: string;
@@ -80,6 +83,9 @@ export default function PaymentGatewayDashboard() {
 
   return (
     <div className="container mx-auto p-4">
+      <div className="absolute right-0 top-0 m-5 cursor-pointer">
+        <ConnectButton></ConnectButton>
+      </div>
       <h1 className="mb-4 text-2xl font-bold">Payment Gateway Dashboard</h1>
 
       <Card className="mb-8">
